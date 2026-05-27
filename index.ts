@@ -1,7 +1,6 @@
-import type {} from "frame-master/plugin";
-import type { FrameMasterPlugin } from "frame-master/plugin/types";
-import type { PluginOptions as ReactCompilerPluginOptions } from "babel-plugin-react-compiler";
 import { transformAsync } from "@babel/core";
+import type { PluginOptions as ReactCompilerPluginOptions } from "babel-plugin-react-compiler";
+import type { FrameMasterPlugin } from "frame-master/plugin/types";
 import { name, version } from "./package.json";
 
 const DEFAULT_FILTER = /\.[cm]?[jt]sx?$/;
@@ -11,10 +10,37 @@ const REACT_COMPILER_PLUGIN = "babel-plugin-react-compiler";
 export type ExcludePattern = RegExp | string;
 
 export type ReactCompilerOptions = {
+	/**
+	 * Overrides the Bun `onLoad` filter used to select candidate source files.
+	 *
+	 * Defaults to matching JavaScript and TypeScript source files, including JSX/TSX.
+	 */
 	filter?: RegExp;
+	/**
+	 * Options forwarded directly to `babel-plugin-react-compiler`.
+	 *
+	 * Use this to configure compiler behavior such as target React version,
+	 * gating, panic thresholds, and other official React Compiler settings.
+	 */
 	compilerOptions?: Partial<ReactCompilerPluginOptions>;
+	/**
+	 * When `true`, files inside `node_modules` are also considered for compilation.
+	 *
+	 * Defaults to `false` to avoid transforming third-party dependencies.
+	 */
 	includeNodeModules?: boolean;
+	/**
+	 * Path patterns to skip before React Compiler runs.
+	 *
+	 * Supports Bun glob strings such as `"*.stories.tsx"` plus nested-directory
+	 * matches, and regular expressions for more specific matching.
+	 */
 	exclude?: ExcludePattern[];
+	/**
+	 * Emits inline source maps from Babel for transformed modules.
+	 *
+	 * Defaults to `false`.
+	 */
 	sourceMaps?: boolean;
 };
 
