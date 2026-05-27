@@ -122,4 +122,34 @@ describe("frame-master React Compiler plugin", () => {
 
 		expect(result).toBeUndefined();
 	});
+
+	test("skips files matched by exclude patterns", async () => {
+		const { callback } = registerOnLoadHandler({
+			exclude: ["**/*.skip.tsx", /ignored\.jsx$/],
+		});
+		const skippedTsxPath = createTempFile(
+			join("src", "Component.skip.tsx"),
+			"export function Component() { return <div />; }",
+		);
+		const ignoredJsxPath = createTempFile(
+			join("src", "ignored.jsx"),
+			"export function Ignored() { return <div />; }",
+		);
+
+		const skippedTsxResult = await callback({
+			path: skippedTsxPath,
+			namespace: "file",
+			loader: "tsx",
+			defer: async () => {},
+		});
+		const ignoredJsxResult = await callback({
+			path: ignoredJsxPath,
+			namespace: "file",
+			loader: "jsx",
+			defer: async () => {},
+		});
+
+		expect(skippedTsxResult).toBeUndefined();
+		expect(ignoredJsxResult).toBeUndefined();
+	});
 });

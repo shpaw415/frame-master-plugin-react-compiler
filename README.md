@@ -32,6 +32,7 @@ import framemasterpluginreactcompiler from "frame-master-plugin-react-compiler";
 framemasterpluginreactcompiler({
   sourceMaps: true,
   includeNodeModules: false,
+  exclude: ["**/*.stories.tsx", /legacy\\//],
   compilerOptions: {
     // Pass-through options for babel-plugin-react-compiler.
   },
@@ -42,6 +43,7 @@ Available options:
 
 - `filter`: Overrides the Bun `onLoad` filter. Defaults to `/\.[cm]?[jt]sx?$/`.
 - `compilerOptions`: Passed directly to `babel-plugin-react-compiler`.
+- `exclude`: Skips matching files before compilation. Accepts Bun glob strings and regular expressions.
 - `includeNodeModules`: Compiles files inside `node_modules` when set to `true`. Defaults to `false`.
 - `sourceMaps`: Emits inline source maps from Babel when set to `true`. Defaults to `false`.
 

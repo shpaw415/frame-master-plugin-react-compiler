@@ -8,12 +8,46 @@ const DEFAULT_FILTER = /\.[cm]?[jt]sx?$/;
 const NODE_MODULES_PATTERN = /[/\\]node_modules[/\\]/;
 const REACT_COMPILER_PLUGIN = "babel-plugin-react-compiler";
 
+export type ExcludePattern = RegExp | string;
+
 export type ReactCompilerOptions = {
 	filter?: RegExp;
 	compilerOptions?: Partial<ReactCompilerPluginOptions>;
 	includeNodeModules?: boolean;
+	exclude?: ExcludePattern[];
 	sourceMaps?: boolean;
 };
+
+function normalizePatternPath(path: string): string {
+	return path.replaceAll("\\", "/");
+}
+
+function matchesPattern(path: string, pattern: ExcludePattern): boolean {
+	const normalizedPath = normalizePatternPath(path);
+
+	if (pattern instanceof RegExp) {
+		pattern.lastIndex = 0;
+
+		if (pattern.test(path)) {
+			return true;
+		}
+
+		pattern.lastIndex = 0;
+		return normalizedPath !== path && pattern.test(normalizedPath);
+	}
+
+	const glob = new Bun.Glob(pattern);
+
+	if (glob.match(normalizedPath)) {
+		return true;
+	}
+
+	if (!pattern.startsWith("/") && !pattern.startsWith("**/")) {
+		return new Bun.Glob(`**/${pattern}`).match(normalizedPath);
+	}
+
+	return false;
+}
 
 async function getSourceText(args: Bun.OnLoadArgs): Promise<string> {
 	if (typeof args.__chainedContents === "string") {
@@ -79,6 +113,7 @@ export default function framemasterpluginreactcompiler(
 		filter = DEFAULT_FILTER,
 		compilerOptions = {},
 		includeNodeModules = false,
+		exclude = [],
 		sourceMaps = false,
 	} = options;
 
@@ -96,6 +131,12 @@ export default function framemasterpluginreactcompiler(
 						name: "react-compiler",
 						setup(build) {
 							build.onLoad({ filter }, async (args) => {
+								if (
+									exclude.some((pattern) => matchesPattern(args.path, pattern))
+								) {
+									return;
+								}
+
 								if (
 									!includeNodeModules &&
 									NODE_MODULES_PATTERN.test(args.path)
